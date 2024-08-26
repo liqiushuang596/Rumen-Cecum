@@ -1,0 +1,128 @@
+##data stat
+ava -jar FastqStat.jar -i samplelist.txt -t 88 > rawdata.stat.xls
+
+##remove host
+for i in Ce7 Ce8 Ce9 Ce10 Ce13 Ce14 Ce15 Ce16 Ce23 Ce24 Ce25 Ce26 Ce27 Ce28 Ce29 Ce30 R7 R8 R9 R10 R13 R14 R15 R16 R23 R24 R25 R26 R27 R28 R29 R30
+do
+bowtie2 -p 88 -x /mnt/10t/database/Capra_hircus/goatgenome -1 /mnt/nas/hjb/program/rum_ce/00.rawdata/$i.clip.1.fq.gz -2 /mnt/nas/hjb/program/rum_ce/00.rawdata/$i.clip.2.fq.gz  -S sample.sam --un-conc-gz $i.rehost.fq
+rm sample.sam
+done
+
+##assembly
+for i in Ce7 Ce8 Ce9 Ce10 Ce13 Ce14 Ce15 Ce16 Ce23 Ce24 Ce25 Ce26 Ce27 Ce28 Ce29 Ce30 R7 R8 R9 R10 R13 R14 R15 R16 R23 R24 R25 R26 R27 R28 R29 R30
+do
+megahit -1 /mnt/nas/hjb/program/rum_ce/01.QC/$i.rehost.1.fq -2 /mnt/nas/hjb/program/rum_ce/01.QC/$i.rehost.2.fq --min-contig-len 500 -t 88 -o /mnt/nas/hjb/program/rum_ce/02.assembly/$i
+done
+
+##predict
+for i in Ce7 Ce8 Ce9 Ce10 Ce13 Ce14 Ce15 Ce16 Ce23 Ce24 Ce25 Ce26 Ce27 Ce28 Ce29 Ce30 R7 R8 R9 R10 R13 R14 R15 R16 R23 R24 R25 R26 R27 R28 R29 R30
+do
+prodigal -a $i.contig.orf.faa -i /mnt/nas/hjb/program/rum_ce/02.assembly/$i.contig.ok.fa -o $i.temp.txt -p meta -q -d $i.contig.orf.ffn
+rm *temp.txt
+cd-hit-est -i $i.contig.orf.ffn -o /mnt/nas/hjb/program/rum_ce/04.geneSet/$i.geneSet.ffn -n 9 -c 0.95 -G 0 -M 0 -d 0 -aS 0.9 -r 1 -T 80
+done
+
+##geneSetProfile
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce7.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce7.rehost.2.fq > Ce7.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce8.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce8.rehost.2.fq > Ce8.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce9.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce9.rehost.2.fq > Ce9.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce10.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce10.rehost.2.fq > Ce10.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce13.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce13.rehost.2.fq > Ce13.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce14.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce14.rehost.2.fq > Ce14.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce15.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce15.rehost.2.fq > Ce15.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce16.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce16.rehost.2.fq > Ce16.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce23.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce23.rehost.2.fq > Ce23.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce24.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce24.rehost.2.fq > Ce24.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce25.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce25.rehost.2.fq > Ce25.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce26.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce26.rehost.2.fq > Ce26.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce27.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce27.rehost.2.fq > Ce27.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce28.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce28.rehost.2.fq > Ce28.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce29.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce29.rehost.2.fq > Ce29.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/Ce30.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/Ce30.rehost.2.fq > Ce30.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R7.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R7.rehost.2.fq > R7.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R8.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R8.rehost.2.fq > R8.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R9.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R9.rehost.2.fq > R9.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R10.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R10.rehost.2.fq > R10.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R13.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R13.rehost.2.fq > R13.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R14.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R14.rehost.2.fq > R14.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R15.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R15.rehost.2.fq > R15.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R16.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R16.rehost.2.fq > R16.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R23.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R23.rehost.2.fq > R23.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R24.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R24.rehost.2.fq > R24.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R25.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R25.rehost.2.fq > R25.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R26.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R26.rehost.2.fq > R26.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R27.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R27.rehost.2.fq > R27.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R28.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R28.rehost.2.fq > R28.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R29.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R29.rehost.2.fq > R29.sam
+bwa mem -t 88 -M /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/01.QC/R30.rehost.1.fq /mnt/nas/hjb/program/rum_ce/01.QC/R30.rehost.2.fq > R30.sam
+perl /mnt/10t/liqs/bin/mete/Profile-Merge-BigBAM.pl sam.list temp.profile.txt temp.reads.txt
+less temp.profile.txt | perl -e 'my $head = <>;print $head;while(<>){chomp;my @a = split;my $b = 0;for ($i = 1;$i<=$#a;$i++){$b+=$a[$i];}if($b>0){print "$_\n";}}' > profile.txt
+perl /mnt/10t/liqs/bin/find_identical.pl temp.reads.txt profile.txt > reads.txt
+perl /mnt/10t/liqs/bin/find_identical.pl uniqGeneSet.fa /mnt/nas/hjb/program/rum_ce/05.profile/profile.txt -format 2 |awk '{print $1}' > uniqGeneSet.ffn
+
+##geneAnnotation
+###KEGG
+conda activate kofamscan
+exec_annotation -o kegg.txt /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa -p /mnt/10t/zsz/kofam/db/profiles -k /mnt/10t/zsz/kofam/db/ko_list --cpu 80
+perl /mnt/10t/zsz/kofam/filter_kofam.pl kegg.txt /mnt/10t/zsz/kofam/K.descript.txt /mnt/10t/zsz/kofam/K.ko.map.txt /mnt/10t/zsz/kofam/ko.layer.txt
+perl /mnt/10t/liqs/database/KEGG/bin/4-10.ko_profile.pl  kegg.category.xls /mnt/nas/hjb/program/rum_ce/05.profile/profile.txt  kegg.profile
+perl /mnt/10t/zsz/kofam/kegg.func.metabolism.pl /mnt/10t/zsz/kofam/K.ko.map.txt /mnt/nas/hjb/program/rum_ce/06.annotation/02.kegg/kegg.profile.entry.xls
+
+###CAZy
+
+###HydDB
+diamond blastp -d /mnt/10t/liqs/database/Hydrogenase/blast/hyddb.all.dmnd -q /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa -e 1e-50 -f 6 -o uniqGeneSet.hyddb_diamond.m6 -k 1 -p 20
+awk '$3 >= 60 && $4 >=40' uniqGeneSet.hyddb_diamond.m6 > uniqGeneSet.hyddb_diamond.ok.m6
+diamond blastp -d /mnt/10t/liqs/database/Hydrogenase/blast/others_combine_database.dmnd -q /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa -e 1e-50 -f 6 -o uniqGeneSet.others_diamond.m6 -k 1 -p 20
+hmmsearch --tblout unique_tigrfam.out -E 1e-10 --cpu 20 /mnt/10t/liqs/database/Hydrogenase/hmm/tigrfam_combine.hmm /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa
+hmmsearch --tblout unique_pfam.out -E 1e-10 --cpu 20 /mnt/10t/liqs/database/Hydrogenase/hmm/pfam_combine.hmm /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa
+hmmsearch --tblout unique_custom.out -E 1e-10 --cpu 20 /mnt/10t/liqs/database/Hydrogenase/hmm/custom_combine.hmm /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa
+hmmsearch --tblout unique_sqr.out -E 1e-10 --cpu 20 /mnt/10t/liqs/database/Hydrogenase/hmm/sulfide_quinone_oxidoreductase_sqr.hmm /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa
+
+##binning
+metaWRAP binning -o /mnt/10t/liqs/huo/program/rum_ce/06.binning_tmp/ -t 88 --metabat2 --metabat1 --maxbin2 --concoct --universal -a /mnt/10t/liqs/huo/program/rum_ce/02.assembly/R9.contig.ok.fa R9.rehost_1.fastq R9.rehosta_2.fastq
+DAS_Tool -i concoct.scaffolds2bin.tsv,metabat1.scaffolds2bin.tsv,metabat2.scaffolds2bin.tsv,maxbin.scaffolds2bin.tsv -l concoct,metabat1,metabat2,maxbin --search_engine diamond --write_bins -t 88 --score_threshold 0 -c /mnt/10t/liqs/huo/program/rum_ce/02.assembly/R9.contig.ok.fa -o dastool-R9
+
+##CheckM
+conda activate checkm2
+/mnt/10t/zsz/checkm2-db/checkm2/bin/checkm2 predict -i /mnt/nas/hjb/program/rum_ce/07.binning/all.tmp.MAG -o /mnt/nas/hjb/program/rum_ce/07.binning/checkm2 -t 40 -x fa
+
+##dRep
+dRep dereplicate /mnt/nas/hjb/program/rum_ce/08.MAG/dRep -g /mnt/nas/hjb/program/rum_ce/08.MAG/q_MAG/*fa -sa 0.99 -p 80 -comp 50 -con 10
+
+##GTDB
+gtdbtk classify_wf --genome_dir /mnt/nas/hjb/program/rum_ce/08.MAG/dRep/dereplicated_genomes --out_dir /mnt/nas/hjb/program/rum_ce/08.MAG/gtdbtk --cpus 60 --extension fa
+
+##MAGprofile
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce10.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce10.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce10_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce13.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce13.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce13_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce14.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce14.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce14_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce15.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce15.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce15_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce16.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce16.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce16_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce23.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce23.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce23_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce24.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce24.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce24_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce25.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce25.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce25_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce26.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce26.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce26_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce27.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce27.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce27_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce28.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce28.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce28_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce29.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce29.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce29_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce30.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce30.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce30_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce7.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce7.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce7_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce8.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce8.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce8_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/Ce9.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/Ce9.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o Ce9_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R10.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R10.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R10_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R13.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R13.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R13_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R14.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R14.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R14_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R15.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R15.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R15_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R16.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R16.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R16_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R23.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R23.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R23_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R24.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R24.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R24_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R25.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R25.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R25_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R26.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R26.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R26_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R27.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R27.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R27_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R28.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R28.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R28_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R29.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R29.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R29_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R30.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R30.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R30_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R7.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R7.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R7_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R8.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R8.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R8_abd.tsv --threads 100 -x fa -m tpm
+coverm genome --coupled /data/hjb/program/rc/metagenome/01.QC/R9.rehost_1.fastq /data/hjb/program/rc/metagenome/01.QC/R9.rehost_2.fastq --genome-fasta-directory ../dRep/dereplicated_genomes/ -o R9_abd.tsv --threads 100 -x fa -m tpm
