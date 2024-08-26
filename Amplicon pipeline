@@ -1,0 +1,98 @@
+cd ../00.data
+ln -s ../trim.1.fq 1.fq.gz
+rename 's/trim.//g' *
+rename 's/fq/fq.gz/g' *
+
+#raw.fq.list
+for i in `ls *gz | awk -F'.' '{print $1}'`; do echo -e $i"\t$PWD/"$i".fq.gz" >> ../raw.fq.list; done
+1	/mnt/sdb/xxx/trim.1.fq
+
+perl /data/liqs/bin/diversity/bins/stat_diver_fq.pl ../raw.fq.list 27F_1492R
+
+mkdir ../01.ASV.tax
+cd ../01.ASV.tax/
+
+#####dada2.r
+library(Rcpp,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(crayon,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(withr,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(ggplot2,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(BiocGenerics,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(S4Vectors,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(IRanges,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(XVector,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(GenomeInfoDb,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(matrixStats,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(Biobase,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(Matrix,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(latticeExtra,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(reshape2,lib.loc="/home/liqs/miniconda3/envs/qiime2-2023.5//lib/R/library")
+library(dada2)
+##----filenames-------------
+path <- "/data/liqs/project/jerseyholstein/jersey16s/met/00.data/"
+fns <- list.files(path, pattern=".fq.gz")
+sample.names <- sapply(strsplit(basename(fns), "[.]"), `[`, 1)
+sample.names
+##----filter and trim-------
+filtpath <- file.path(path, "filtered")
+filterAndTrim(file.path(path,fns), file.path(filtpath,fns),  maxEE=1, truncQ=2, rm.phix=TRUE, compress=TRUE, verbose=TRUE, multithread=TRUE)
+filts <- list.files(filtpath, pattern="fq", full.names=TRUE)
+names(filts) <- sample.names
+##----learn Errors rate----------
+set.seed(100)
+err <- learnErrors(filts, nbases = 1e8, multithread=TRUE, randomize=TRUE)
+##----Infer sequence variants----
+dds <- vector("list", length(sample.names))
+names(dds) <- sample.names
+for(sam in sample.names) {
+        cat("Processing:", sam, "\n")
+        derep <- derepFastq(filts[[sam]])  ##Dereplication
+        dds[[sam]] <- dada(derep, err=err, multithread=TRUE)  ##dada2
+}
+##----Construct sequence table---
+seqtab <- makeSequenceTable(dds)
+saveRDS(seqtab, "./seqtab.rds")
+write.table(t(seqtab),"table.xls",sep="\t")
+# Merge multiple runs (if necessary)
+#st1 <- readRDS("path/to/run1/output/seqtab.rds")
+#st2 <- readRDS("path/to/run2/output/seqtab.rds")
+#st3 <- readRDS("path/to/run3/output/seqtab.rds")
+#st.all <- mergeSequenceTables(st1, st2, st3)
+##----Remove chimeras------------
+seqtabrechim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE)
+write.table(t(seqtabrechim),"table.rechim.xls",sep="\t",quote=FALSE)
+#######
+
+~/miniconda3/envs/qiime2-2023.5/bin/R --no-save < dada2.r
+
+########map.txt
+perl /data/liqs/bin/diversity/bins/dada2normal.pl table.rechim.xls
+perl /data/liqs/bin/diversity/bins/order_group_name.pl asv_table.tmp.xls ../map.txt > asv_table.xls
+#SampleID	Group
+
+rm asv_table.tmp.xls
+
+conda activate qiime2-2023.5
+
+biom convert -i asv_table.xls -o asv_table.biom --table-type "OTU table" --to-json
+
+conda deactivate
+mv asv_rep.fasta asv_rep.fasta.back
+perl /data/liqs/bin/find_identical_2.pl asv_rep.fasta.back asv_table.xls -format 2 > asv_rep.fasta
+
+library(vegan)
+otu = read.table('asv_table.xls', header=T, sep="\t", quote = "", row.names=1, comment.char="", stringsAsFactors = FALSE)
+colSums(otu)
+otu_Flattening =as.data.frame(t(rrarefy(t(otu),min(colSums(otu)))))
+colSums(otu_Flattening)
+write.table(otu_Flattening, file="asv_weighted_table.xls",sep ="\t", quote=FALSE)
+
+####silva138.1
+mothur"#classify.seqs(fasta=asv_rep.fasta,reference=/mnt/20t/liqs/database/mothur_silva138.1/silva.nr_v138_1.align,taxonomy=/mnt/20t/liqs/database/mothur_silva138.1/silva.nr_v138_1.tax,cutoff=90,probs=F,processors=32)"
+
+perl /data/liqs/bin/find_identical_2.pl asv_table.xls asv_rep.nr_v138.wang.taxonomy -type 3 > asv_table_tax.xls
+head -1 asv_table.xls > tablehead.xls
+cat tablehead.xls asv_table_tax.xls >> asv_table_tax.ok.xls
+
+perl /data/liqs/bin/find_identical_2.pl asv_weighted_table.xls asv_rep.nr_v138.wang.taxonomy -type 3 > asv_weighted_table_tax.xls
+cat tablehead.xls asv_weighted_table_tax.xls >> asv_weighted_table_tax.ok.xls
