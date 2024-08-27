@@ -69,6 +69,7 @@ perl /mnt/10t/liqs/database/KEGG/bin/4-10.ko_profile.pl  kegg.category.xls /mnt/
 perl /mnt/10t/zsz/kofam/kegg.func.metabolism.pl /mnt/10t/zsz/kofam/K.ko.map.txt /mnt/nas/hjb/program/rum_ce/06.annotation/02.kegg/kegg.profile.entry.xls
 
 ###CAZy
+run_dbcan uniqGeneSet.fa --dia_eval 1e-50 --dia_cpu 64 --hmm_eval 1e-15 --hmm_cov 0.35 --hmm_cpu 64 --out_pre tmp --out_dir /data/liqs/project/huo_meta/tmp/ --db_dir /data/zsz/tool/dbcan/db/  --tools all --dbcan_thread 64 -hmmcov 0.35 -hmmevalue 1e-15 meta
 
 ###HydDB
 diamond blastp -d /mnt/10t/liqs/database/Hydrogenase/blast/hyddb.all.dmnd -q /mnt/nas/hjb/program/rum_ce/04.geneSet/uniqGeneSet.faa -e 1e-50 -f 6 -o uniqGeneSet.hyddb_diamond.m6 -k 1 -p 20
